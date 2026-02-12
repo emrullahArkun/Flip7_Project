@@ -75,6 +75,34 @@ class RoundStateTest {
         assertTrue(state.hand(p2).isEmpty());
     }
 
+    // Tests if hasActivePlayers returns true when at least one player can act
+    @Test
+    void hasActivePlayers_returnsTrue_ifAtLeastOnePlayerCanAct() {
+        Player p1 = testPlayer("P1");
+        Player p2 = testPlayer("P2");
+        RoundState state = new RoundState();
+        state.initRound(List.of(p1, p2));
+
+        state.setStatus(p1, PlayerStatus.STAYED);
+        state.setStatus(p2, PlayerStatus.ACTIVE);
+
+        assertTrue(state.hasActivePlayers(List.of(p1, p2)));
+    }
+
+    // Tests if hasActivePlayers returns false when no players can act
+    @Test
+    void hasActivePlayers_returnsFalse_ifAllPlayersCannotAct() {
+        Player p1 = testPlayer("P1");
+        Player p2 = testPlayer("P2");
+        RoundState state = new RoundState();
+        state.initRound(List.of(p1, p2));
+
+        state.setStatus(p1, PlayerStatus.BUSTED);
+        state.setStatus(p2, PlayerStatus.STAYED);
+
+        assertFalse(state.hasActivePlayers(List.of(p1, p2)));
+    }
+
     private Player testPlayer(String name) {
         return new Player() {
             @Override public PlayerAction decide(TurnInfo turnInfo) {

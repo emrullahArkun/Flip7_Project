@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -86,6 +87,35 @@ class GameEngineTest {
 
         assertDoesNotThrow(engine::playRound);
         assertEquals(0, deck.drawPileSize());
+    }
+
+    // Tests if playRound returns a winner when the score limit is reached
+    @Test
+    void playRound_returnsWinner_ifScoreLimitReached() {
+        Deck deck = new Deck(List.of(
+                new Card(10, CardType.NUMBER)
+        ));
+
+        ScriptedPlayer p1 = new ScriptedPlayer("P1", "P2",
+                PlayerAction.HIT, PlayerAction.STAY
+        );
+
+        // Target score 10, player draws 10 -> wins immediately
+        GameEngine engine = new GameEngine(List.of(p1), deck, 10);
+
+        Optional<Player> winner = engine.playRound();
+
+        assertTrue(winner.isPresent());
+        assertEquals("P1", winner.get().getName());
+    }
+
+    // Tests if default constructor creates an engine with default settings
+    @Test
+    void defaultConstructor_createsEngineWithDefaults() {
+        ScriptedPlayer p1 = new ScriptedPlayer("P1", "P2", PlayerAction.STAY);
+        GameEngine engine = new GameEngine(List.of(p1));
+
+        assertDoesNotThrow(engine::playRound);
     }
 
     // --- Test helpers ---

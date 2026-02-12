@@ -136,6 +136,79 @@ class TurnProcessorTest {
         ), state.hand(target));
     }
 
+    // Tests if action card has no effect when no other players are active
+    @Test
+    void actionCard_hasNoEffect_ifNoTargetsAreActive() {
+        Deck deck = new Deck(List.of(
+                new Card(0, CardType.FREEZE)
+        ));
+
+        Player actor = new HitPlayer("A");
+        // B is already busted, so not a valid target
+        Player target = new HitPlayer("B");
+
+        RoundState state = new RoundState();
+        List<Player> players = List.of(actor, target);
+        state.initRound(players);
+        state.setStatus(target, PlayerStatus.BUSTED);
+
+        TurnProcessor tp = new TurnProcessor(deck, players, state);
+
+        tp.processTurn(actor);
+
+        // Actor should still be active, target remains busted
+        assertEquals(PlayerStatus.ACTIVE, state.status(actor));
+        assertEquals(PlayerStatus.BUSTED, state.status(target));
+    }
+
+    // Tests if target selection defaults to first eligible player if invalid name chosen
+    @Test
+    void selectTarget_defaultsToFirstEligible_ifPlayerChoosesInvalidName() {
+        Deck deck = new Deck(List.of(
+                new Card(0, CardType.FREEZE)
+        ));
+
+        // Actor chooses "INVALID_NAME", should default to "B"
+        Player actor = new TargetingHitPlayer("A", "INVALID_NAME");
+        Player target = new HitPlayer("B");
+
+        RoundState state = new RoundState();
+        List<Player> players = List.of(actor, target);
+        state.initRound(players);
+
+        TurnProcessor tp = new TurnProcessor(deck, players, state);
+
+        tp.processTurn(actor);
+
+        assertEquals(PlayerStatus.FROZEN, state.status(target));
+    }
+
+    // Tests if FLIP_THREE stops drawing if the target busts midway
+    @Test
+    void flipThree_stopsDrawing_ifTargetBustsMidway() {
+        Deck deck = new Deck(List.of(
+                new Card(0, CardType.FLIP_THREE),
+                new Card(5, CardType.NUMBER),
+                new Card(5, CardType.NUMBER), // Duplicate -> Bust
+                new Card(1, CardType.NUMBER)  // Should NOT be drawn
+        ));
+
+        Player actor = new TargetingHitPlayer("A", "B");
+        Player target = new HitPlayer("B");
+
+        RoundState state = new RoundState();
+        List<Player> players = List.of(actor, target);
+        state.initRound(players);
+
+        TurnProcessor tp = new TurnProcessor(deck, players, state);
+
+        tp.processTurn(actor);
+
+        assertEquals(PlayerStatus.BUSTED, state.status(target));
+        // Should have 2 cards (5 and 5), not 3
+        assertEquals(2, state.hand(target).size());
+    }
+
     // --- Test helpers ---
 
     private static class HitPlayer implements Player {
@@ -157,7 +230,6 @@ class TurnProcessorTest {
 
         @Override
         public String chooseTarget(TargetInfo info) {
-            // Deterministic target selection for tests.
             return targetName;
         }
     }
