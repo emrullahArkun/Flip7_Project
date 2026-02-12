@@ -6,7 +6,7 @@ package com.flavia.engine;
  * Decision:
  * - ACTIVE: Player may act
  * - STAYED: Player voluntarily stopped
- * - BUSTED: Player is out (duplicate)
+ * - BUSTED: Player is out
  * - FROZEN: Player was stopped immediately by FREEZE (like STAYED, but reason matters)
  */
 public enum PlayerStatus {

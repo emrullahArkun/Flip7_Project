@@ -10,9 +10,9 @@ public class ConsolePlayer implements Player {
     private final String name;
     private final Scanner scanner;
 
-    public ConsolePlayer(String name) {
+    public ConsolePlayer(String name, Scanner scanner) {
         this.name = name;
-        this.scanner = new Scanner(System.in);
+        this.scanner = scanner;
     }
 
     @Override

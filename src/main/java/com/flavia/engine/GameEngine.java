@@ -22,6 +22,10 @@ public class GameEngine {
     }
 
     public GameEngine(List<Player> players, Deck deck, int targetScore) {
+        if (players.size() < 3 || players.size() > 18) {
+            throw new IllegalArgumentException("Number of players must be between 3 and 18. Given: " + players.size());
+        }
+
         this.deck = deck;
         this.players = List.copyOf(players);
         this.turnProcessor = new TurnProcessor(this.deck, this.players, roundState);

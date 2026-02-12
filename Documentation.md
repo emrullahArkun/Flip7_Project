@@ -75,38 +75,14 @@ src/main/java/com/flavia/
 
 ---
 
-## 6. Laufzeitsicht (Runtime View)
-
-### 6.1 Ablauf „Eine Runde“
-1. `GameEngine.playRound()` → `RoundState.initRound(players)`
-2. Solange aktive Spieler existieren:
-   - `TurnProcessor.processTurn(player)`
-3. `ScoreBoard.scoreRound(...)` berechnet Rundenpunkte & Winner
-4. `RoundState.collectAllPlayedCards(...)` → `Deck.discardAll(...)`
-
-### 6.2 Ablauf „Ein Zug (HIT)“
-1. `TurnProcessor` erstellt `TurnInfo` (Snapshot) und fragt `Player.decide(...)`
-2. Bei **HIT**:
-   - `Deck.draw()`
-   - **NUMBER**:
-     - Duplikat? → falls `SECOND_CHANCE` vorhanden: konsumieren & Duplikat ignorieren, sonst `BUSTED`
-   - **ACTION**:
-     - `FREEZE`: wählt Ziel → Zielstatus `FROZEN`
-     - `FLIP_THREE`: Ziel zieht 3 Karten (über `forceDraw`)
-     - `SECOND_CHANCE`: bleibt als Karte in Hand, wird beim Duplikat verbraucht
-
-> Hinweis: `TurnInfo` ist als **read-only Snapshot** gedacht. In Code sollte dafür eine **Kopie** der Hand genutzt werden (z.B. `List.copyOf(hand)`), damit spätere Hand-Änderungen den Snapshot nicht verändern.
-
----
-
-## 7. Verteilungssicht
+## 6. Verteilungssicht
 
 - Lokale JVM-Ausführung (Konsole)
 - Keine externen Services
 
 ---
 
-## 8. Querschnittliche Konzepte
+## 7. Querschnittliche Konzepte
 
 - **Snapshot/Immutability:** `TurnInfo` nur lesen; Player kann Engine nicht direkt steuern.
 - **Deterministische Tests:** `Deck` kann von außen injiziert werden.
@@ -114,7 +90,7 @@ src/main/java/com/flavia/
 
 ---
 
-## 9. Wichtige Architekturentscheidungen
+## 8. Wichtige Architekturentscheidungen
 
 | Entscheidung | Begründung |
 |---|---|
@@ -124,7 +100,7 @@ src/main/java/com/flavia/
 
 ---
 
-## 10. Qualitätsanforderungen
+## 9. Qualitätsanforderungen
 
 - **Testbarkeit:** deterministische Szenarien (Preset Deck, Scripted Players)
 - **Wartbarkeit:** klare Zuständigkeiten pro Paket/Klasse
@@ -132,13 +108,13 @@ src/main/java/com/flavia/
 
 ---
 
-## 11. Risiken & Technische Schulden
+## 10. Risiken & Technische Schulden
 
 - Snapshot-Bug, wenn `TurnInfo.myCards` nur View auf `hand` ist (nach Rundenende wird Hand geleert).
 
 ---
 
-## 12. Glossar
+## 11. Glossar
 
 | Begriff | Bedeutung |
 |---|---|

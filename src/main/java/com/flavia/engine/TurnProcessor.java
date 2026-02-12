@@ -71,15 +71,14 @@ public class TurnProcessor {
             if (isDuplicate) {
                 // Check for Second Chance card to save the player
                 if (consumeSecondChanceIfAvailable(hand)) {
-                    System.out.println("   ✅ Second Chance used: Duplicate " + drawn.value() + " ignored.");
+                    System.out.println("Second Chance used: Duplicate " + drawn.value() + " ignored.");
                     deck.discardAll(List.of(drawn));
-                    return;
                 } else {
                     hand.add(drawn); // Add to hand to show the duplicate
                     System.out.println("!!! " + player.getName() + " BUSTED! (Duplicate) !!!");
                     state.setStatus(player, PlayerStatus.BUSTED);
-                    return;
                 }
+                return;
             }
 
             hand.add(drawn);
@@ -103,7 +102,7 @@ public class TurnProcessor {
                     return;
                 }
                 Player target = targetOpt.get();
-                System.out.println("   ❄️ FREEZE: " + target.getName() + " must stop immediately.");
+                System.out.println("FREEZE: " + target.getName() + " must stop immediately.");
                 state.setStatus(target, PlayerStatus.FROZEN);
             }
 
@@ -114,16 +113,16 @@ public class TurnProcessor {
                     return;
                 }
                 Player target = targetOpt.get();
-                System.out.println("   🎴 FLIP_THREE: " + target.getName() + " draws 3 cards.");
-                forceDraw(target, 3);
+                System.out.println("FLIP_THREE: " + target.getName() + " draws 3 cards.");
+                forceDraw(target);
             }
 
             default -> { }
         }
     }
 
-    private void forceDraw(Player target, int amount) {
-        for (int i = 0; i < amount; i++) {
+    private void forceDraw(Player target) {
+        for (int i = 0; i < 3; i++) {
             if (!state.status(target).canAct()) return;
             drawAndResolve(target);
         }
@@ -146,7 +145,7 @@ public class TurnProcessor {
             if (p.getName().equals(chosenName)) return Optional.of(p);
         }
         // Default to first eligible if choice is invalid
-        return Optional.of(eligible.get(0));
+        return Optional.of(eligible.getFirst());
     }
 
     private boolean consumeSecondChanceIfAvailable(List<Card> hand) {
@@ -168,10 +167,9 @@ public class TurnProcessor {
     }
 
     private int calculatePoints(List<Card> hand) {
-        int points = 0;
-        for (Card card : hand) {
-            if (card.type() == CardType.NUMBER) points += card.value();
-        }
-        return points;
+        return hand.stream()
+                .filter(card -> card.type() == CardType.NUMBER)
+                .mapToInt(Card::value)
+                .sum();
     }
 }

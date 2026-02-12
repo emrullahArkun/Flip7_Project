@@ -38,7 +38,8 @@ public class ScoreBoard {
                 System.out.println(player.getName() + ": " + roundPoints + " Points");
             }
 
-            int newTotal = totalScores.get(player) + roundPoints;
+            int currentTotal = totalScores.getOrDefault(player, 0);
+            int newTotal = currentTotal + roundPoints;
             totalScores.put(player, newTotal);
 
             System.out.println("   -> New Total: " + newTotal);
