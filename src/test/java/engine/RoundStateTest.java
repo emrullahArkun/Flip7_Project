@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RoundStateTest {
 
+    // Tests if initializing a round sets all players to ACTIVE and clears hands
     @Test
     void initRound_setsAllPlayersActive_andHandsEmpty() {
         Player p1 = testPlayer("P1");
@@ -31,6 +32,7 @@ class RoundStateTest {
         assertTrue(state.hand(p2).isEmpty());
     }
 
+    // Tests if securedPlayerNames returns only players who STAYED or are FROZEN
     @Test
     void securedPlayerNames_containsOnlyStayedAndFrozen() {
         Player p1 = testPlayer("P1");
@@ -52,6 +54,7 @@ class RoundStateTest {
         assertEquals(List.of("P1", "P2"), secured);
     }
 
+    // Tests if collecting all played cards returns them and clears player hands
     @Test
     void collectAllPlayedCards_returnsAllCards_andClearsHands() {
         Player p1 = testPlayer("P1");

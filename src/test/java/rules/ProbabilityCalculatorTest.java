@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ProbabilityCalculatorTest {
 
+    // Tests if success probability is 0.0 when the deck is empty
     @Test
     void successProbability_emptyDeck_isZero() {
         double p = ProbabilityCalculator.calculateSuccessProbability(
@@ -23,9 +24,9 @@ class ProbabilityCalculatorTest {
         assertEquals(0.0, p);
     }
 
+    // Tests if success probability is 1.0 when a Second Chance card is held
     @Test
     void successProbability_secondChanceInHand_isAlwaysOne() {
-        // With Second Chance available, the next duplicate can be ignored once.
         double p = ProbabilityCalculator.calculateSuccessProbability(
                 List.of(new Card(0, CardType.SECOND_CHANCE), new Card(5, CardType.NUMBER)),
                 List.of(new Card(5, CardType.NUMBER), new Card(5, CardType.NUMBER))
@@ -34,6 +35,7 @@ class ProbabilityCalculatorTest {
         assertEquals(1.0, p);
     }
 
+    // Tests if only duplicate number cards in the deck are counted as bust risks
     @Test
     void successProbability_countsOnlyDuplicateNumberCards_asBustRisk() {
         // Hand has {5,7}. Deck has two 5s => 2 "bad" cards out of 4 total.
@@ -50,6 +52,7 @@ class ProbabilityCalculatorTest {
         assertEquals(0.5, p);
     }
 
+    // Tests if success probability is 1.0 when no duplicates are possible
     @Test
     void successProbability_noDuplicatesPossible_isOne() {
         double p = ProbabilityCalculator.calculateSuccessProbability(

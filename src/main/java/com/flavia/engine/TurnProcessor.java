@@ -26,15 +26,18 @@ public class TurnProcessor {
     }
 
     public void processTurn(Player player) {
+        // Skip if player cannot act (e.g. BUSTED, STAYED, FROZEN)
         if (!state.status(player).canAct()) return;
 
         List<Card> hand = state.hand(player);
 
+        // Calculate probability of drawing a safe card
         double successProb = ProbabilityCalculator.calculateSuccessProbability(
                 hand,
                 deck.viewDrawPile()
         );
 
+        // Prepare info for player decision
         TurnInfo info = new TurnInfo(
                 List.copyOf(hand),
                 calculatePoints(hand),
@@ -46,11 +49,12 @@ public class TurnProcessor {
         PlayerAction action = player.decide(info);
 
         if (action == PlayerAction.STAY) {
-            System.out.println("-> " + player.getName() + " bleibt stehen.");
+            System.out.println("-> " + player.getName() + " stays.");
             state.setStatus(player, PlayerStatus.STAYED);
             return;
         }
 
+        // Player chose to HIT
         drawAndResolve(player);
     }
 
@@ -59,19 +63,20 @@ public class TurnProcessor {
 
         List<Card> hand = state.hand(player);
         Card drawn = deck.draw();
-        System.out.println("-> " + player.getName() + " zieht: " + drawn);
+        System.out.println("-> " + player.getName() + " draws: " + drawn);
 
         if (drawn.type() == CardType.NUMBER) {
             boolean isDuplicate = hasNumberValue(hand, drawn.value());
 
             if (isDuplicate) {
+                // Check for Second Chance card to save the player
                 if (consumeSecondChanceIfAvailable(hand)) {
-                    System.out.println("   ✅ Second Chance verbraucht: Duplikat " + drawn.value() + " ignoriert.");
+                    System.out.println("   ✅ Second Chance used: Duplicate " + drawn.value() + " ignored.");
                     deck.discardAll(List.of(drawn));
                     return;
                 } else {
-                    hand.add(drawn); // optional sichtbar lassen
-                    System.out.println("!!! " + player.getName() + " ist BUST! (Duplikat) !!!");
+                    hand.add(drawn); // Add to hand to show the duplicate
+                    System.out.println("!!! " + player.getName() + " BUSTED! (Duplicate) !!!");
                     state.setStatus(player, PlayerStatus.BUSTED);
                     return;
                 }
@@ -81,7 +86,7 @@ public class TurnProcessor {
             return;
         }
 
-        // ACTION
+        // Handle Action Cards
         hand.add(drawn);
         applyActionCard(player, drawn);
     }
@@ -89,27 +94,27 @@ public class TurnProcessor {
     private void applyActionCard(Player actor, Card actionCard) {
         switch (actionCard.type()) {
 
-            case SECOND_CHANCE -> System.out.println("   (Second Chance erhalten)");
+            case SECOND_CHANCE -> System.out.println("   (Second Chance acquired)");
 
             case FREEZE -> {
                 Optional<Player> targetOpt = selectTarget(actor, CardType.FREEZE);
                 if (targetOpt.isEmpty()) {
-                    System.out.println("   (FREEZE ohne Effekt: kein aktives Ziel)");
+                    System.out.println("   (FREEZE no effect: no active target)");
                     return;
                 }
                 Player target = targetOpt.get();
-                System.out.println("   ❄️ FREEZE: " + target.getName() + " muss sofort stoppen.");
+                System.out.println("   ❄️ FREEZE: " + target.getName() + " must stop immediately.");
                 state.setStatus(target, PlayerStatus.FROZEN);
             }
 
             case FLIP_THREE -> {
                 Optional<Player> targetOpt = selectTarget(actor, CardType.FLIP_THREE);
                 if (targetOpt.isEmpty()) {
-                    System.out.println("   (FLIP_THREE ohne Effekt: kein aktives Ziel)");
+                    System.out.println("   (FLIP_THREE no effect: no active target)");
                     return;
                 }
                 Player target = targetOpt.get();
-                System.out.println("   🎴 FLIP_THREE: " + target.getName() + " zieht 3 Karten.");
+                System.out.println("   🎴 FLIP_THREE: " + target.getName() + " draws 3 cards.");
                 forceDraw(target, 3);
             }
 
@@ -125,6 +130,7 @@ public class TurnProcessor {
     }
 
     private Optional<Player> selectTarget(Player actor, CardType actionType) {
+        // Find eligible targets (other active players)
         List<Player> eligible = new ArrayList<>();
         for (Player p : players) {
             if (p == actor) continue;
@@ -132,12 +138,14 @@ public class TurnProcessor {
         }
         if (eligible.isEmpty()) return Optional.empty();
 
+        // Ask actor to choose a target
         List<String> names = eligible.stream().map(Player::getName).toList();
         String chosenName = actor.chooseTarget(new TargetInfo(actionType, actor.getName(), names));
 
         for (Player p : eligible) {
             if (p.getName().equals(chosenName)) return Optional.of(p);
         }
+        // Default to first eligible if choice is invalid
         return Optional.of(eligible.get(0));
     }
 

@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TurnProcessorTest {
 
+    // Tests if Second Chance card is consumed to ignore a duplicate, keeping player active
     @Test
     void secondChance_isConsumed_andDuplicateIsIgnored_statusStaysActive() {
         Deck deck = new Deck(List.of(
@@ -58,6 +59,7 @@ class TurnProcessorTest {
         assertEquals(1, fives);
     }
 
+    // Tests if drawing a duplicate without a Second Chance card busts the player
     @Test
     void duplicateWithoutSecondChance_bustsPlayer() {
         Deck deck = new Deck(List.of(
@@ -80,6 +82,7 @@ class TurnProcessorTest {
         assertEquals(PlayerStatus.BUSTED, state.status(p1));
     }
 
+    // Tests if FREEZE card sets target to FROZEN and prevents them from acting
     @Test
     void freeze_setsTargetToFrozen_andTargetDoesNotGetTurn() {
         Deck deck = new Deck(List.of(
@@ -104,6 +107,7 @@ class TurnProcessorTest {
         assertEquals(0, target.decideCalls);
     }
 
+    // Tests if FLIP_THREE forces the target to draw three cards in order
     @Test
     void flipThree_forcesTargetToDrawThreeCards_inOrder() {
         Deck deck = new Deck(List.of(

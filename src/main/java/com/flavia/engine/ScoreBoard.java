@@ -22,11 +22,12 @@ public class ScoreBoard {
     }
 
     public Optional<Player> scoreRound(List<Player> players, RoundState state) {
-        System.out.println("\n=== RUNDENABRECHNUNG ===");
+        System.out.println("\n=== ROUND SCORING ===");
 
         for (Player player : players) {
             List<Card> hand = state.hand(player);
 
+            // If busted, 0 points for this round
             int roundPoints = (state.status(player) == PlayerStatus.BUSTED)
                     ? 0
                     : calculatePoints(hand);
@@ -40,8 +41,9 @@ public class ScoreBoard {
             int newTotal = totalScores.get(player) + roundPoints;
             totalScores.put(player, newTotal);
 
-            System.out.println("   -> Neuer Gesamtstand: " + newTotal);
+            System.out.println("   -> New Total: " + newTotal);
 
+            // Check for win condition
             if (newTotal >= targetScore) {
                 System.out.println("\n*** GAME OVER! " + player.getName() + " HAS WON! ***");
                 System.out.println("========================\n");
@@ -56,6 +58,7 @@ public class ScoreBoard {
     private int calculatePoints(List<Card> hand) {
         int points = 0;
         for (Card card : hand) {
+            // Only number cards count towards score
             if (card.type() == CardType.NUMBER) points += card.value();
         }
         return points;

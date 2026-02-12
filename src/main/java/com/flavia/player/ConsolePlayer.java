@@ -22,18 +22,20 @@ public class ConsolePlayer implements Player {
 
     @Override
     public PlayerAction decide(TurnInfo info) {
-        System.out.println("\n--- " + name + " ist am Zug ---");
-        System.out.println("Deine Karten: " + info.myCards());
-        System.out.println("Aktuelle Punkte: " + info.currentPoints());
-        System.out.printf("Erfolgswahrscheinlichkeit: %.1f%%%n", info.successProbability() * 100);
-        System.out.println("Karten im Deck: " + info.cardsRemainingInDeck());
+        // Display current turn information to the user
+        System.out.println("\n--- " + name + "'s Turn ---");
+        System.out.println("Your Cards: " + info.myCards());
+        System.out.println("Current Points: " + info.currentPoints());
+        System.out.printf("Success Probability: %.1f%%%n", info.successProbability() * 100);
+        System.out.println("Cards remaining in Deck: " + info.cardsRemainingInDeck());
 
         if (!info.securedPlayerNames().isEmpty()) {
-            System.out.println("Aktive Spieler: " + info.securedPlayerNames());
+            System.out.println("Secured Players: " + info.securedPlayerNames());
         }
 
+        // Loop until valid input is received
         while (true) {
-            System.out.print("Entscheidung: (h)it oder (s)tay? ");
+            System.out.print("Decision: (h)it or (s)tay? ");
             String input = scanner.nextLine().trim().toLowerCase();
 
             if (input.equals("h") || input.equals("hit")) {
@@ -43,26 +45,28 @@ public class ConsolePlayer implements Player {
                 return PlayerAction.STAY;
             }
 
-            System.out.println("Bitte 'h'/'hit' oder 's'/'stay' eingeben.");
+            System.out.println("Please enter 'h'/'hit' or 's'/'stay'.");
         }
     }
 
     @Override
     public String chooseTarget(TargetInfo info) {
+        // Display available targets for the action card
         var targets = info.eligibleTargetNames();
-        System.out.println("\nAktionskarte: " + info.actionCard() + " (von " + info.actorName() + ")");
+        System.out.println("\nAction Card: " + info.actionCard() + " (from " + info.actorName() + ")");
         for (int i = 0; i < targets.size(); i++) {
             System.out.println((i + 1) + ") " + targets.get(i));
         }
 
+        // Loop until valid target selection
         while (true) {
-            System.out.print("Wähle Zielspieler (1-" + targets.size() + "): ");
+            System.out.print("Choose target player (1-" + targets.size() + "): ");
             String input = scanner.nextLine().trim();
             try {
                 int idx = Integer.parseInt(input) - 1;
                 if (idx >= 0 && idx < targets.size()) return targets.get(idx);
             } catch (NumberFormatException ignored) {}
-            System.out.println("Ungültig. Bitte Zahl eingeben.");
+            System.out.println("Invalid. Please enter a number.");
         }
     }
 

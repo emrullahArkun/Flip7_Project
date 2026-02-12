@@ -5,7 +5,7 @@ import com.flavia.domain.enums.CardType;
 
 import java.util.List;
 
-/** Kontext für Zielauswahl bei Aktionskarten. */
+/** Context for target selection when playing action cards. */
 public record TargetInfo(
         CardType actionCard,
         String actorName,

@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ScoreBoardTest {
 
+    // Tests if a busted player receives zero points for the round
     @Test
     void scoreRound_bustedPlayer_getsZeroPoints() {
         Player p1 = testPlayer();
@@ -36,6 +37,7 @@ class ScoreBoardTest {
         assertTrue(winner.isEmpty());
     }
 
+    // Tests if points are correctly added for a non-busted player
     @Test
     void scoreRound_addsPointsForNonBustedPlayer() {
         Player p1 = testPlayer();
@@ -55,6 +57,7 @@ class ScoreBoardTest {
         // We can't directly read totals here (by design). Winner test covers threshold behavior below.
     }
 
+    // Tests if a winner is returned when the target score is reached or exceeded
     @Test
     void scoreRound_returnsWinner_whenTargetScoreReachedOrExceeded() {
         Player p1 = testPlayer();
@@ -74,6 +77,7 @@ class ScoreBoardTest {
         assertEquals("P1", winner.get().getName());
     }
 
+    // Tests if scores accumulate across rounds until a winner is found
     @Test
     void scoreRound_accumulatesAcrossRounds_untilWinner() {
         Player p1 = testPlayer();

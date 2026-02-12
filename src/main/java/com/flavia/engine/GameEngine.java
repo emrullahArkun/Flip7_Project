@@ -11,11 +11,13 @@ public class GameEngine {
     private final Deck deck;
     private final List<Player> players;
 
+    // Tracks current round status (active players, pot, etc)
     private final RoundState roundState = new RoundState();
     private final TurnProcessor turnProcessor;
     private final ScoreBoard scoreBoard;
 
     public GameEngine(List<Player> players) {
+        // Default game with standard deck and target score 200
         this(players, new Deck(), 200);
     }
 
@@ -28,14 +30,17 @@ public class GameEngine {
 
     public Optional<Player> playRound() {
         System.out.println("\n--- NEW ROUND STARTING ---");
+        // Reset round state for new round
         roundState.initRound(players);
 
+        // Continue until all players fold or bust
         while (roundState.hasActivePlayers(players)) {
             for (Player player : players) {
                 turnProcessor.processTurn(player);
             }
         }
 
+        // Calculate scores and check for game winner
         Optional<Player> winner = scoreBoard.scoreRound(players, roundState);
 
         // Collect cards + discard (to keep deck cyclic)

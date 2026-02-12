@@ -4,11 +4,11 @@ import com.flavia.domain.enums.PlayerAction;
 import com.flavia.domain.model.TurnInfo;
 
 /**
- * Einfacher Bot: zieht bis zu einem Punktelimit, sonst bleibt er stehen.
+ * Simple Bot: Hits until a point limit is reached, then stays.
  *
- * Entscheidung:
- * - Bot-Logik gehört in player/, nicht in Main oder Engine.
- * - Engine bleibt generisch: sie kennt nur das Player-Interface.
+ * Decision:
+ * - Bot logic belongs in the player package, not in Main or Engine.
+ * - The engine remains generic: it only knows the Player interface.
  */
 public class SimpleBotPlayer implements Player {
 
@@ -27,11 +27,12 @@ public class SimpleBotPlayer implements Player {
 
     @Override
     public PlayerAction decide(TurnInfo info) {
+        // Simple strategy: hit until the score limit is reached
         if (info.currentPoints() < hitUntilPoints) {
-            System.out.println(name + " zieht eine Karte.");
+            System.out.println(name + " hits.");
             return PlayerAction.HIT;
         }
-        System.out.println(name + " bleibt stehen.");
+        System.out.println(name + " stays.");
         return PlayerAction.STAY;
     }
 }

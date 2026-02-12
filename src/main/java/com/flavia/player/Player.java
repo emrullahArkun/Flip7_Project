@@ -7,9 +7,9 @@ import com.flavia.domain.model.TurnInfo;
  * Player interface: defines ONLY the decision logic.
  *
  * Decision:
- * - Engine (Dealer) asks the Player: "HIT or STAY?"
- * - Player receives a snapshot (TurnInfo).
- * - No engine methods here -> Player cannot manipulate the flow.
+ * - Engine asks: "HIT or STAY?"
+ * - Player gets snapshot (TurnInfo).
+ * - No engine manipulation allowed.
  */
 public interface Player {
 
@@ -17,6 +17,7 @@ public interface Player {
 
     String getName();
 
+    // Default implementation picks the first available target
     default String chooseTarget(TargetInfo info) {
         return info.eligibleTargetNames().getFirst();
     }

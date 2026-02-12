@@ -9,14 +9,6 @@ import java.util.Set;
 
 /**
  * Calculates the probability that the next HIT will NOT result in a bust.
- *
- * Bust Rule:
- * - Bust occurs when drawing a NUMBER card whose value is already in hand.
- *
- * Second Chance (consumed):
- * - If at least one SECOND_CHANCE card is in hand, the NEXT duplicate draw
- *   can be intercepted once (Second Chance is removed).
- * - For the question "Will I bust on this HIT?", this means: Success = 100%.
  */
 public class ProbabilityCalculator {
 
@@ -47,10 +39,6 @@ public class ProbabilityCalculator {
         return false;
     }
 
-    /**
-     * Bust probability = Proportion of NUMBER cards in the deck that would cause a duplicate.
-     * (Special Cards count as safe draws in this model.)
-     */
     private static double getBustProbability(List<Card> playerHand, List<Card> remainingDeck) {
         Set<Integer> ownedValues = new HashSet<>();
         for (Card c : playerHand) {

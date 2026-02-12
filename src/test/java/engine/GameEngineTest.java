@@ -18,9 +18,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GameEngineTest {
 
+    // Tests if FREEZE card stops the target immediately without asking for decision
     @Test
     void freeze_stopsTargetImmediately_andTargetIsNotAskedToDecide() {
-        // Deck: actor draws FREEZE first.
         Deck deck = new Deck(List.of(
                 new Card(0, CardType.FREEZE)
         ));
@@ -34,14 +34,12 @@ class GameEngineTest {
 
         engine.playRound();
 
-        // Target should be frozen before their turn; decide() must not be called.
         assertEquals(0, target.decideCalls);
     }
 
+    // Tests if FLIP_THREE forces target to draw 3 cards and they appear in hand
     @Test
     void flipThree_forcesTargetToDrawThree_andTargetSeesThoseCardsOnItsTurn() {
-        // Deck order:
-        // A draws FLIP_THREE, then B gets 1,2,3 as forced draws.
         Deck deck = new Deck(List.of(
                 new Card(0, CardType.FLIP_THREE),
                 new Card(1, CardType.NUMBER),
@@ -66,16 +64,14 @@ class GameEngineTest {
         ), target.lastInfo.myCards());
     }
 
+    // Tests if deck recycles discarded cards across rounds correctly
     @Test
     void deck_recyclesDiscardAcrossRounds_withoutCrashing() {
-        // Only 2 cards exist -> after round 1 draw pile is empty, discard has 2 cards.
-        // Round 2 must refill from discard and still allow two draws.
         Deck deck = new Deck(List.of(
                 new Card(4, CardType.NUMBER),
                 new Card(9, CardType.NUMBER)
         ));
 
-        // Each player: HIT once, then STAY (repeat for 2 rounds => 4 actions).
         ScriptedPlayer p1 = new ScriptedPlayer("P1", "P2",
                 PlayerAction.HIT, PlayerAction.STAY, PlayerAction.HIT, PlayerAction.STAY
         );
@@ -86,10 +82,10 @@ class GameEngineTest {
         GameEngine engine = new GameEngine(List.of(p1, p2), deck, 9999);
 
         assertDoesNotThrow(engine::playRound);
-        assertEquals(0, deck.drawPileSize()); // both cards drawn in round 1
+        assertEquals(0, deck.drawPileSize());
 
         assertDoesNotThrow(engine::playRound);
-        assertEquals(0, deck.drawPileSize()); // recycled cards drawn in round 2
+        assertEquals(0, deck.drawPileSize());
     }
 
     // --- Test helpers ---
