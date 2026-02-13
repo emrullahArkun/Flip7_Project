@@ -108,13 +108,7 @@ src/main/java/com/flavia/
 
 ---
 
-## 10. Risiken & Technische Schulden
-
-- Snapshot-Bug, wenn `TurnInfo.myCards` nur View auf `hand` ist (nach Rundenende wird Hand geleert).
-
----
-
-## 11. Glossar
+## 10. Glossar
 
 | Begriff | Bedeutung |
 |---|---|

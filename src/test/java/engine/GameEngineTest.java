@@ -31,7 +31,10 @@ class GameEngineTest {
         );
         ProbeStayPlayer target = new ProbeStayPlayer("B");
 
-        GameEngine engine = new GameEngine(List.of(actor, target), deck, 9999);
+        // Dummy player to satisfy GameEngine(min 3 players)
+        ProbeStayPlayer filler = new ProbeStayPlayer("C");
+
+        GameEngine engine = new GameEngine(List.of(actor, target, filler), deck, 9999);
 
         engine.playRound();
 
@@ -53,7 +56,10 @@ class GameEngineTest {
         );
         ProbeStayPlayer target = new ProbeStayPlayer("B");
 
-        GameEngine engine = new GameEngine(List.of(actor, target), deck, 9999);
+        // Dummy player to satisfy GameEngine(min 3 players)
+        ProbeStayPlayer filler = new ProbeStayPlayer("C");
+
+        GameEngine engine = new GameEngine(List.of(actor, target, filler), deck, 9999);
 
         engine.playRound();
 
@@ -80,7 +86,10 @@ class GameEngineTest {
                 PlayerAction.HIT, PlayerAction.STAY, PlayerAction.HIT, PlayerAction.STAY
         );
 
-        GameEngine engine = new GameEngine(List.of(p1, p2), deck, 9999);
+        // Dummy player: must NOT HIT, otherwise you'd need 3 draws with only 2 cards
+        ProbeStayPlayer filler = new ProbeStayPlayer("P3");
+
+        GameEngine engine = new GameEngine(List.of(p1, p2, filler), deck, 9999);
 
         assertDoesNotThrow(engine::playRound);
         assertEquals(0, deck.drawPileSize());
@@ -100,8 +109,12 @@ class GameEngineTest {
                 PlayerAction.HIT, PlayerAction.STAY
         );
 
+        // Dummy players (STAY), just to satisfy >= 3 players rule
+        ProbeStayPlayer filler1 = new ProbeStayPlayer("P2");
+        ProbeStayPlayer filler2 = new ProbeStayPlayer("P3");
+
         // Target score 10, player draws 10 -> wins immediately
-        GameEngine engine = new GameEngine(List.of(p1), deck, 10);
+        GameEngine engine = new GameEngine(List.of(p1, filler1, filler2), deck, 10);
 
         Optional<Player> winner = engine.playRound();
 
@@ -113,7 +126,12 @@ class GameEngineTest {
     @Test
     void defaultConstructor_createsEngineWithDefaults() {
         ScriptedPlayer p1 = new ScriptedPlayer("P1", "P2", PlayerAction.STAY);
-        GameEngine engine = new GameEngine(List.of(p1));
+
+        // Dummy players (STAY) to satisfy >= 3 players rule
+        ProbeStayPlayer filler1 = new ProbeStayPlayer("P2");
+        ProbeStayPlayer filler2 = new ProbeStayPlayer("P3");
+
+        GameEngine engine = new GameEngine(List.of(p1, filler1, filler2));
 
         assertDoesNotThrow(engine::playRound);
     }
@@ -132,6 +150,7 @@ class GameEngineTest {
         }
 
         TurnInfo lastInfo = null;
+
         @Override
         public PlayerAction decide(TurnInfo turnInfo) {
             lastInfo = turnInfo;
