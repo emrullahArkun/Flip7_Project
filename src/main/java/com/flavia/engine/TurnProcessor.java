@@ -5,34 +5,53 @@ import com.flavia.domain.enums.PlayerAction;
 import com.flavia.domain.model.Card;
 import com.flavia.domain.model.Deck;
 import com.flavia.domain.model.TurnInfo;
+import com.flavia.exceptions.DeckEmptyException;
 import com.flavia.player.Player;
 import com.flavia.player.TargetInfo;
-import com.flavia.rules.ProbabilityCalculator;
+import com.flavia.rules.DefaultProbabilityCalculator;
+import com.flavia.rules.SuccessProbabilityCalculator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class TurnProcessor {
 
+    private static final int FLIP_THREE_COUNT = 3;
+
     private final Deck deck;
     private final List<Player> players;
     private final RoundState state;
+    private final SuccessProbabilityCalculator probabilityCalculator;
+    private final Map<CardType, CardEffect> cardEffects;
 
     public TurnProcessor(Deck deck, List<Player> players, RoundState state) {
+        this(deck, players, state, new DefaultProbabilityCalculator());
+    }
+
+    public TurnProcessor(Deck deck, List<Player> players, RoundState state, SuccessProbabilityCalculator probabilityCalculator) {
         this.deck = deck;
         this.players = players;
         this.state = state;
+        this.probabilityCalculator = probabilityCalculator;
+        this.cardEffects = Map.of(
+                CardType.FREEZE, new FreezeEffect(),
+                CardType.FLIP_THREE, new FlipThreeEffect(),
+                CardType.SECOND_CHANCE, new SecondChanceEffect()
+        );
     }
 
-    public void processTurn(Player player) {
+    public TurnResult processTurn(Player player) {
+        List<TurnEvent> events = new ArrayList<>();
+
         // Skip if player cannot act (e.g. BUSTED, STAYED, FROZEN)
-        if (!state.status(player).canAct()) return;
+        if (!state.status(player).canAct()) return new TurnResult(events);
 
         List<Card> hand = state.hand(player);
 
         // Calculate probability of drawing a safe card
-        double successProb = ProbabilityCalculator.calculateSuccessProbability(
+        double successProb = probabilityCalculator.calculateSuccessProbability(
                 hand,
                 deck.viewDrawPile()
         );
@@ -49,21 +68,28 @@ public class TurnProcessor {
         PlayerAction action = player.decide(info);
 
         if (action == PlayerAction.STAY) {
-            System.out.println("-> " + player.getName() + " stays.");
             state.setStatus(player, PlayerStatus.STAYED);
-            return;
+            events.add(new TurnEvent.PlayerStayed(player));
+            return new TurnResult(events);
         }
 
         // Player chose to HIT
-        drawAndResolve(player);
+        drawAndResolve(player, events);
+        return new TurnResult(events);
     }
 
-    private void drawAndResolve(Player player) {
+    private void drawAndResolve(Player player, List<TurnEvent> events) {
         if (!state.status(player).canAct()) return;
 
         List<Card> hand = state.hand(player);
-        Card drawn = deck.draw();
-        System.out.println("-> " + player.getName() + " draws: " + drawn);
+        Card drawn;
+        try {
+            drawn = deck.draw();
+        } catch (DeckEmptyException e) {
+            events.add(new TurnEvent.DeckEmpty());
+            return;
+        }
+        events.add(new TurnEvent.CardDrawn(player, drawn));
 
         if (drawn.type() == CardType.NUMBER) {
             boolean isDuplicate = hasNumberValue(hand, drawn.value());
@@ -71,12 +97,12 @@ public class TurnProcessor {
             if (isDuplicate) {
                 // Check for Second Chance card to save the player
                 if (consumeSecondChanceIfAvailable(hand)) {
-                    System.out.println("Second Chance used: Duplicate " + drawn.value() + " ignored.");
+                    events.add(new TurnEvent.SecondChanceConsumed(player, drawn));
                     deck.discardAll(List.of(drawn));
                 } else {
                     hand.add(drawn); // Add to hand to show the duplicate
-                    System.out.println("!!! " + player.getName() + " BUSTED! (Duplicate) !!!");
                     state.setStatus(player, PlayerStatus.BUSTED);
+                    events.add(new TurnEvent.PlayerBusted(player, drawn));
                 }
                 return;
             }
@@ -87,48 +113,26 @@ public class TurnProcessor {
 
         // Handle Action Cards
         hand.add(drawn);
-        applyActionCard(player, drawn);
+        applyActionCard(player, drawn, events);
     }
 
-    private void applyActionCard(Player actor, Card actionCard) {
-        switch (actionCard.type()) {
-
-            case SECOND_CHANCE -> System.out.println("   (Second Chance acquired)");
-
-            case FREEZE -> {
-                Optional<Player> targetOpt = selectTarget(actor, CardType.FREEZE);
-                if (targetOpt.isEmpty()) {
-                    System.out.println("   (FREEZE no effect: no active target)");
-                    return;
-                }
-                Player target = targetOpt.get();
-                System.out.println("FREEZE: " + target.getName() + " must stop immediately.");
-                state.setStatus(target, PlayerStatus.FROZEN);
-            }
-
-            case FLIP_THREE -> {
-                Optional<Player> targetOpt = selectTarget(actor, CardType.FLIP_THREE);
-                if (targetOpt.isEmpty()) {
-                    System.out.println("   (FLIP_THREE no effect: no active target)");
-                    return;
-                }
-                Player target = targetOpt.get();
-                System.out.println("FLIP_THREE: " + target.getName() + " draws 3 cards.");
-                forceDraw(target);
-            }
-
-            default -> { }
+    private void applyActionCard(Player actor, Card actionCard, List<TurnEvent> events) {
+        CardEffect effect = cardEffects.get(actionCard.type());
+        if (effect != null) {
+            effect.apply(this, actor, actionCard, events);
         }
     }
 
-    private void forceDraw(Player target) {
-        for (int i = 0; i < 3; i++) {
+    // Made public for CardEffect implementations
+    public void forceDraw(Player target, List<TurnEvent> events) {
+        for (int i = 0; i < FLIP_THREE_COUNT; i++) {
             if (!state.status(target).canAct()) return;
-            drawAndResolve(target);
+            drawAndResolve(target, events);
         }
     }
 
-    private Optional<Player> selectTarget(Player actor, CardType actionType) {
+    // Made public for CardEffect implementations
+    public Optional<Player> selectTarget(Player actor, CardType actionType) {
         // Find eligible targets (other active players)
         List<Player> eligible = new ArrayList<>();
         for (Player p : players) {
@@ -146,6 +150,11 @@ public class TurnProcessor {
         }
         // Default to first eligible if choice is invalid
         return Optional.of(eligible.getFirst());
+    }
+
+    // Made public for CardEffect implementations
+    public void setStatus(Player player, PlayerStatus status) {
+        state.setStatus(player, status);
     }
 
     private boolean consumeSecondChanceIfAvailable(List<Card> hand) {

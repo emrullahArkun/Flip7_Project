@@ -1,6 +1,7 @@
 package com.flavia.domain.model;
 
 import com.flavia.domain.enums.CardType;
+import com.flavia.exceptions.DeckEmptyException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,12 +33,12 @@ public class Deck {
     /**
      * Draws the top card. Refills from discard pile if empty.
      */
-    public Card draw() {
+    public Card draw() throws DeckEmptyException {
         if (drawPile.isEmpty()) {
             refillFromDiscard();
         }
         if (drawPile.isEmpty()) {
-            throw new IllegalStateException("No cards left in the deck!");
+            throw new DeckEmptyException("No cards left in the deck!");
         }
         return drawPile.removeFirst();
     }

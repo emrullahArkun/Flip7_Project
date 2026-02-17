@@ -3,6 +3,7 @@ package domain;
 import com.flavia.domain.enums.CardType;
 import com.flavia.domain.model.Card;
 import com.flavia.domain.model.Deck;
+import com.flavia.exceptions.DeckEmptyException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,7 +15,7 @@ class DeckTest {
 
     // Tests if drawing from a preset deck returns cards in order and updates size
     @Test
-    void draw_fromPresetDeck_returnsCardsInOrder_andDecreasesSize() {
+    void draw_fromPresetDeck_returnsCardsInOrder_andDecreasesSize() throws DeckEmptyException {
         Deck deck = new Deck(List.of(
                 new Card(1, CardType.NUMBER),
                 new Card(2, CardType.NUMBER),
@@ -44,7 +45,7 @@ class DeckTest {
 
     // Tests if the deck refills from discard pile when draw pile is empty
     @Test
-    void draw_whenDrawPileEmpty_butDiscardHasCards_refillsAndDrawsOneOfThoseCards() {
+    void draw_whenDrawPileEmpty_butDiscardHasCards_refillsAndDrawsOneOfThoseCards() throws DeckEmptyException {
         Deck deck = new Deck(List.of()); // empty draw pile
         Card c1 = new Card(3, CardType.NUMBER);
         Card c2 = new Card(0, CardType.FREEZE);
@@ -61,7 +62,7 @@ class DeckTest {
     @Test
     void draw_whenNoCardsAnywhere_throws() {
         Deck deck = new Deck(List.of());
-        assertThrows(IllegalStateException.class, deck::draw);
+        assertThrows(DeckEmptyException.class, deck::draw);
     }
 
     // Tests if discarding an empty list works without error

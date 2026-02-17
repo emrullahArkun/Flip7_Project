@@ -8,6 +8,8 @@ import com.flavia.domain.model.TurnInfo;
 import com.flavia.engine.PlayerStatus;
 import com.flavia.engine.RoundState;
 import com.flavia.engine.TurnProcessor;
+import com.flavia.engine.TurnResult;
+import com.flavia.engine.TurnEvent;
 import com.flavia.player.Player;
 import com.flavia.player.TargetInfo;
 import org.junit.jupiter.api.Test;
@@ -45,9 +47,12 @@ class TurnProcessorTest {
         assertTrue(state.hand(p1).stream().anyMatch(c -> c.type() == CardType.NUMBER && c.value() == 5));
 
         // Draw duplicate NUMBER 5 -> should consume Second Chance and ignore the duplicate
-        tp.processTurn(p1);
+        TurnResult result = tp.processTurn(p1);
 
         assertEquals(PlayerStatus.ACTIVE, state.status(p1));
+
+        // Verify event
+        assertTrue(result.events().stream().anyMatch(e -> e instanceof TurnEvent.SecondChanceConsumed));
 
         // Second Chance should be removed from hand after consumption
         assertFalse(state.hand(p1).stream().anyMatch(c -> c.type() == CardType.SECOND_CHANCE));
@@ -78,8 +83,9 @@ class TurnProcessorTest {
         tp.processTurn(p1); // first 5
         assertEquals(PlayerStatus.ACTIVE, state.status(p1));
 
-        tp.processTurn(p1); // duplicate 5 -> bust
+        TurnResult result = tp.processTurn(p1); // duplicate 5 -> bust
         assertEquals(PlayerStatus.BUSTED, state.status(p1));
+        assertTrue(result.events().stream().anyMatch(e -> e instanceof TurnEvent.PlayerBusted));
     }
 
     // Tests if FREEZE card sets target to FROZEN and prevents them from acting
@@ -98,9 +104,10 @@ class TurnProcessorTest {
 
         TurnProcessor tp = new TurnProcessor(deck, players, state);
 
-        tp.processTurn(actor);
+        TurnResult result = tp.processTurn(actor);
 
         assertEquals(PlayerStatus.FROZEN, state.status(target));
+        assertTrue(result.events().stream().anyMatch(e -> e instanceof TurnEvent.PlayerFrozen));
 
         // Frozen players must not act; processTurn should return early without calling decide().
         tp.processTurn(target);
@@ -126,7 +133,7 @@ class TurnProcessorTest {
 
         TurnProcessor tp = new TurnProcessor(deck, players, state);
 
-        tp.processTurn(actor);
+        TurnResult result = tp.processTurn(actor);
 
         assertEquals(3, state.hand(target).stream().filter(c -> c.type() == CardType.NUMBER).count());
         assertEquals(List.of(
@@ -134,11 +141,13 @@ class TurnProcessorTest {
                 new Card(2, CardType.NUMBER),
                 new Card(3, CardType.NUMBER)
         ), state.hand(target));
+        
+        assertTrue(result.events().stream().anyMatch(e -> e instanceof TurnEvent.ActionCardPlayed));
     }
 
-    // Tests if action card has no effect when no other players are active
+    // Tests if FREEZE card targets self when no other players are active
     @Test
-    void actionCard_hasNoEffect_ifNoTargetsAreActive() {
+    void freeze_targetsSelf_ifNoOtherTargetsAreActive() {
         Deck deck = new Deck(List.of(
                 new Card(0, CardType.FREEZE)
         ));
@@ -156,8 +165,8 @@ class TurnProcessorTest {
 
         tp.processTurn(actor);
 
-        // Actor should still be active, target remains busted
-        assertEquals(PlayerStatus.ACTIVE, state.status(actor));
+        // Actor should be FROZEN because they are the only active player
+        assertEquals(PlayerStatus.FROZEN, state.status(actor));
         assertEquals(PlayerStatus.BUSTED, state.status(target));
     }
 

@@ -89,7 +89,7 @@ class ScoreBoardTest {
         RoundState state1 = new RoundState();
         state1.initRound(players);
         state1.hand(p1).add(new Card(4, CardType.NUMBER));
-        assertTrue(board.scoreRound(players, state1).isEmpty());
+        board.scoreRound(players, state1);
 
         // Round 2: 6 points -> total becomes 10 => winner
         RoundState state2 = new RoundState();

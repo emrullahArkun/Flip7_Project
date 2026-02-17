@@ -15,6 +15,7 @@ public class GameEngine {
     private final RoundState roundState = new RoundState();
     private final TurnProcessor turnProcessor;
     private final ScoreBoard scoreBoard;
+    private final ConsoleGameView view;
 
     public GameEngine(List<Player> players) {
         // Default game with standard deck and target score 200
@@ -30,17 +31,19 @@ public class GameEngine {
         this.players = List.copyOf(players);
         this.turnProcessor = new TurnProcessor(this.deck, this.players, roundState);
         this.scoreBoard = new ScoreBoard(this.players, targetScore);
+        this.view = new ConsoleGameView();
     }
 
     public Optional<Player> playRound() {
-        System.out.println("\n--- NEW ROUND STARTING ---");
+        view.displayRoundStart();
         // Reset round state for new round
         roundState.initRound(players);
 
         // Continue until all players fold or bust
         while (roundState.hasActivePlayers(players)) {
             for (Player player : players) {
-                turnProcessor.processTurn(player);
+                TurnResult result = turnProcessor.processTurn(player);
+                view.displayTurnEvents(result.events());
             }
         }
 
